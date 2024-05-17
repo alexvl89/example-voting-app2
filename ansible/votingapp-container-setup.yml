@@ -1,0 +1,60 @@
+---
+- name: Deploy
+  hosts: app01-staging
+  become: yes
+
+  tasks:
+    # Переменные
+    - name: IncludeVars
+      include_vars:
+        dir: vars
+
+    # Папка для временных файлов
+    - name: CreateTempDir
+      file:
+        path: /tmp/voapp
+        state: directory
+        mode: 0775
+
+    # Копирование docker файлов
+    - name: CopyDockerComposeFiles
+      template:
+        src: templates/docker-compose.j2
+        dest: /tmp/voapp/docker-compose.yml
+        force: yes
+
+    # Копирование docker файлов
+    - name: Copy Sh Files
+      template:
+        src: ./healthchecks/postgres.sh
+        dest: /tmp/voapp/postgres.sh
+        force: yes
+
+    # Останавливаем все запущенные контейнеры
+    - name: StopAllDockerContainers
+      shell:
+        cmd: docker stop $(docker ps -q)
+      ignore_errors: true
+      tags:
+        - docker-cleanup
+
+    # Удаляем старые образы
+    - name: RemoveAllUnusedDockerImages
+      shell:
+        cmd: docker system prune --all --force
+      tags:
+        - docker-cleanup
+
+    # Поднимаем приложения из контейнера
+    - name: SetupWithDocker
+      shell:
+        cmd: docker-compose up -d
+        chdir: /tmp/voapp
+      register: contdeploy
+      tags:
+        - container-setup
+
+    # Вывести на консоль
+    - name: DisplayResult
+      debug:
+        msg: "Log from docker-compose: \n {{contdeploy}}\n"

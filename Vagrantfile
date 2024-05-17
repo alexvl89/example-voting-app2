@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
   config.vm.boot_timeout = 900
 
   config.vm.define "appserver" do |appserver|
-    appserver.vm.box = "docker-server"
+    appserver.vm.box = "ubuntu-server"
 	appserver.vm.hostname = "appserver"
     appserver.vm.network "private_network", ip: "172.16.2.4", virtualbox__intnet: true
 	appserver.vm.network "forwarded_port", guest: 5000, host: 5000
@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
   end 
   
   config.vm.define "acm" do |build|
-	build.vm.box = "docker-server"
+	build.vm.box = "ubuntu-server"
     build.vm.hostname = "acm"
 	build.vm.network "private_network", ip: "172.16.2.3", virtualbox__intnet: true
 
